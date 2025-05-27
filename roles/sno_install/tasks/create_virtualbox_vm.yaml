@@ -1,0 +1,63 @@
+---
+# roles/sno_install/tasks/create_virtualbox_vm.yaml
+
+- name: Remove existing VM if exists
+  shell: |
+    if VBoxManage list vms | grep -q "\"{{ item }}\""; then
+      VBoxManage controlvm "{{ item }}" poweroff || true
+      VBoxManage unregistervm "{{ item }}" --delete-all
+    fi
+  loop: [sno1]
+
+- name: Remove existing disk image
+  shell: |
+    if [ -f "{{ hostvars['sno1'].raw_path }}" ]; then
+      echo "Deleting existing VDI: {{ hostvars['sno1'].raw_path }}"
+      VBoxManage closemedium disk "{{ hostvars['sno1'].raw_path }}" --delete || true
+    fi
+  loop: [sno1]
+
+- name: Create disk image
+  shell: |
+    VBoxManage createmedium disk --filename "{{ hostvars['sno1'].raw_path }}" --size 153600 --format raw --variant Fixed
+  loop: [sno1]
+
+- name: Convert mac_addr from sno1 to mac on localhost (no colons, lowercase)
+  set_fact:
+    sno1_mac: "{{ hostvars['sno1'].mac_addr | regex_replace(':', '') | lower }}"
+
+- name: Create and configure VirtualBox VM with SCHED_FIFO 99
+  shell: |
+    VBoxManage createvm --name "{{ item }}" --register
+    VBoxManage modifyvm "{{ item }}" --memory 20480 --cpus 8 --ioapic on
+    VBoxManage modifyvm "{{ item }}" --nic1 bridged --bridgeadapter1 "{{ hostvars['localhost'].bridge_if }}" --nictype1 virtio
+    VBoxManage modifyvm "{{ item }}" --macaddress1 "{{ sno1_mac }}"
+    VBoxManage modifyvm "{{ item }}" --vrde on --vrdeport 5900 --vrdeproperty VNCPassword=vnc
+    VBoxManage storagectl "{{ item }}" --name "VirtIO Controller" --add virtio --controller VirtIO --hostiocache on
+    VBoxManage storageattach "{{ item }}" --storagectl "VirtIO Controller" --port 0 --device 0 --type hdd --medium "{{ hostvars['sno1'].raw_path }}" --nonrotational on || true
+    VBoxManage storageattach "{{ item }}" --storagectl "VirtIO Controller" --port 1 --device 0 --type dvddrive --medium "{{ hostvars['sno1'].iso_path }}" || true
+    VBoxManage modifyvm "{{ item }}" --boot1 disk --boot2 dvd --boot3 none --boot4 none
+  loop: [sno1]
+
+- name: Start VirtualBox VM
+  shell: |
+    chrt -f 99 VBoxManage startvm "{{ item }}" --type headless
+  loop: [sno1]
+
+- name: Wait for VBoxHeadless process
+  shell: |
+    timeout 10 bash -c 'until pgrep -f "VBoxHeadless.*{{ item }}"; do sleep 1; done'
+  loop: [sno1]
+
+- name: Set I/O priority for VBoxHeadless
+  shell: |
+    for PID in $(pgrep -f "VBoxHeadless.*{{ item }}");do
+      ionice -c1 -n0 -p $PID
+    done
+  loop: [sno1]
+
+# 終了タイマーが必要なら下記（import_tasksか、debugで代用でもOK）
+- name: (Optional) 終了タイマー呼び出し
+  import_role:
+    name: common
+

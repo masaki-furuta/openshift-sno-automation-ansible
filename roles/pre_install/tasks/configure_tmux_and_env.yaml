@@ -1,0 +1,61 @@
+---
+# roles/pre_install/tasks/configure_tmux_and_env.yaml
+
+- name: Check if tmux default command is already in ~/.tmux.conf
+  stat:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+  register: tmux_conf_file
+
+- name: Set tmux default command to bash --login
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+    line: 'set-option -g default-command "bash --login"'
+    create: true
+  when: tmux_conf_file.stat.exists == false or
+        "'set-option -g default-command \"bash --login\"' not in lookup('file', ansible_env.HOME + '/.tmux.conf')"
+
+- name: Enable mouse mode in tmux
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+    line: 'set-option -g mouse on'
+    create: true
+  when: tmux_conf_file.stat.exists == false or
+        "'set-option -g mouse on' not in lookup('file', ansible_env.HOME + '/.tmux.conf')"
+
+- name: Set scrollback history to 10000 lines
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.tmux.conf"
+    line: 'set-option -g history-limit 10000'
+    create: true
+  when: tmux_conf_file.stat.exists == false or
+        "'set-option -g history-limit 10000' not in lookup('file', ansible_env.HOME + '/.tmux.conf')"
+
+- name: Check if tmux session logic exists in ~/.bashrc
+  stat:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+  register: bashrc_file
+
+- name: Insert tmux auto-start block in ~/.bashrc
+  blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    block: |
+      if [ -z "$TMUX" ] && [[ $- == *i* ]] && [ -t 0 ]; then
+          read -r -p "Do you want to start tmux and run OCP installation? [y/N] " answer
+          case "$answer" in
+              [Yy]*)
+                  tmux new-session -d
+                  tmux attach-session
+                  ;;
+              *)
+                  ;;
+          esac
+      fi
+    create: true
+  when: bashrc_file.stat.exists == false or "'if [ -z \"$TMUX\" ] && [[ $- == *i* ]] && [ -t 0 ]; then' not in lookup('file', ansible_env.HOME + '/.bashrc')"
+
+# 最後に通知・終了等したい場合はここにdebug等でメッセージを出しても良いです
+- name: (Optional) Playbook完了通知
+  debug:
+    msg: "tmux/basrcセットアップが完了しました。"
+
+

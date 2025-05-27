@@ -1,0 +1,70 @@
+---
+# roles/sno_install/tasks/configure_hypervisor_access.yaml
+
+- name: Create /root/.ssh/config
+  copy:
+    dest: /root/.ssh/config
+    content: |
+      Host sno1
+          Hostname              192.168.1.100
+          User                  core
+
+      Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile    /dev/null
+          LogLevel              QUIET
+          CanonicalizeHostname yes
+          CanonicalDomains local
+          CanonicalizeFallbackLocal yes
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure systemd-resolved override directory exists
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+
+- name: Configure systemd-resolved to forward .apps.sno-cluster.test to 127.0.0.1
+  copy:
+    dest: /etc/systemd/resolved.conf.d/dnsmasq-openshift.conf
+    content: |
+      [Resolve]
+      DNS=127.0.0.1
+      Domains=~apps.sno-cluster.test ~sno-cluster.test
+    mode: '0644'
+
+- name: Ensure dnsmasq.d directory exists
+  file:
+    path: /etc/dnsmasq.d
+    state: directory
+    mode: '0755'
+
+- name: Add dnsmasq rule for .apps.sno-cluster.test and related entries
+  copy:
+    dest: /etc/dnsmasq.d/openshift.conf
+    content: |
+      address=/.apps.sno-cluster.test/192.168.1.100
+      address=/sno-cluster.test/192.168.1.100
+      ptr-record=.in-addr.arpa,sno1.sno-cluster.test
+      ptr-record=.in-addr.arpa,api.apps.sno-cluster.test
+      no-resolv
+    mode: '0644'
+
+- name: Enable and restart dnsmasq
+  systemd:
+    name: dnsmasq
+    enabled: yes
+    state: restarted
+
+- name: Restart systemd-resolved to apply domain forwarding
+  systemd:
+    name: systemd-resolved
+    state: restarted
+
+# 必要であれば終了タイマーや通知はここに（推奨はimport_role形式）
+- name: (Optional) 終了タイマー呼び出し
+  import_role:
+    name: common
+

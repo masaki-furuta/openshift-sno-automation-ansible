@@ -1,0 +1,8 @@
+---
+- name: Start timer
+  include_tasks: timer_start.yaml
+
+# 必要に応じて他の共通処理を追加
+- name: End timer
+  include_tasks: timer_end.yaml
+

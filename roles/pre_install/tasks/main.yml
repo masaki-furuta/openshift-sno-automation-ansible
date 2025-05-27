@@ -1,0 +1,7 @@
+---
+- name: Generate timestamp
+  include_tasks: generate_timestamp.yaml
+
+- name: Configure tmux and environment
+  include_tasks: configure_tmux_and_env.yaml
+

@@ -1,0 +1,13 @@
+---
+- name: Create Agent ISO
+  include_tasks: create_agent_iso.yaml
+
+- name: Configure hypervisor access
+  include_tasks: configure_hypervisor_access.yaml
+
+- name: Create VirtualBox VM
+  include_tasks: create_virtualbox_vm.yaml
+
+- name: Check node readiness
+  include_tasks: check_node_ready.yaml
+

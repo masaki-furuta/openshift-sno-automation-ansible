@@ -1,0 +1,30 @@
+---
+- name: "Record end time for {{ play_description | default(playbook_dir) }}"
+  set_fact:
+    this_end: "{{ lookup('pipe','date +%s') | int }}"
+  run_once: true
+
+- name: "Display end time in Asia/Tokyo"
+  debug:
+    msg: >-
+      {{
+        lookup(
+          'pipe',
+          "TZ=Asia/Tokyo date -d @"
+          ~ this_end|string
+          ~ " '+%Y-%m-%d %H:%M:%S %Z'"
+        )
+      }}
+  run_once: true
+
+- name: "Display elapsed time"
+  debug:
+    msg: >-
+      Elapsed: {{
+        ((this_end | int) - (this_start | int)) // 3600
+      }}h {{
+        (((this_end | int) - (this_start | int)) % 3600) // 60
+      }}m {{
+        ((this_end | int) - (this_start | int)) % 60
+      }}s
+  run_once: true

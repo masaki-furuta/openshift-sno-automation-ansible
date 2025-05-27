@@ -1,0 +1,83 @@
+---
+# roles/sno_install/tasks/create_agent_iso.yaml
+
+- name: Set backup_path
+  set_fact:
+    backup_path: "../deployment/previous-run/{{ backup_time }}"
+
+- name: Ensure timestamped backup directory exists
+  file:
+    path: "{{ backup_path }}"
+    state: directory
+
+- name: Stat agent-config.yaml
+  stat:
+    path: "../deployment/agent-config.yaml"
+  register: agent_config_file
+
+- name: Stat install-config.yaml
+  stat:
+    path: "../deployment/install-config.yaml"
+  register: install_config_file
+
+- name: Backup agent-config.yaml if exists
+  copy:
+    src: "../deployment/agent-config.yaml"
+    dest: "{{ backup_path }}/agent-config.yaml"
+    remote_src: true
+    force: true
+  when: agent_config_file.stat.exists
+
+- name: Backup install-config.yaml if exists
+  copy:
+    src: "../deployment/install-config.yaml"
+    dest: "{{ backup_path }}/install-config.yaml"
+    remote_src: true
+    force: true
+  when: install_config_file.stat.exists
+
+- name: Stat openshift directory
+  stat:
+    path: "../deployment/openshift/"
+  register: openshift_dir
+
+- name: Backup openshift directory if exists
+  synchronize:
+    src: "../deployment/openshift/"
+    dest: "{{ backup_path }}/openshift/"
+    mode: push
+  when: openshift_dir.stat.exists
+
+- name: Run openshift-install agent create image
+  command: openshift-install agent create image --dir ../deployment --log-level debug
+  args:
+    chdir: "{{ playbook_dir }}"
+
+- name: Stat agent.x86_64.iso
+  stat:
+    path: "../deployment/agent.x86_64.iso"
+  register: agent_iso_file
+
+- name: Backup deployment ISO if exists
+  copy:
+    src: "../deployment/agent.x86_64.iso"
+    dest: "{{ backup_path }}/agent.x86_64.iso"
+    remote_src: true
+    force: true
+  when: agent_iso_file.stat.exists
+
+- name: Backup auth directory
+  synchronize:
+    src: "../deployment/auth/"
+    dest: "{{ backup_path }}/auth/"
+    mode: push
+
+- name: Launch OpenShift installer monitor via tmux
+  shell: >
+    tmux split-window -h "sleep 20;openshift-install --dir ../deployment agent wait-for install-complete --log-level=debug;read -p 'Finished.'" \; resize-pane -L 50 \; split-window -h "bash" \; resize-pane -R 10 \; select-pane -t 2
+  async: 10
+  poll: 0
+
+- name: (Optional) 終了タイマー呼び出し
+  import_role:
+    name: common
