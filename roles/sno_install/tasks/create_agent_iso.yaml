@@ -1,9 +1,27 @@
 ---
 # roles/sno_install/tasks/create_agent_iso.yaml
 
+- name: Remove old .openshift_install files in deployment
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ playbook_dir }}/../deployment/.openshift_install.log"
+    - "{{ playbook_dir }}/../deployment/.openshift_install_state.json"
+
+- name: Generate agent-config.yaml from template
+  template:
+    src: agent-config.yaml.j2
+    dest: "{{ playbook_dir }}/../deployment/agent-config.yaml"
+
+- name: Generate install-config.yaml from template
+  template:
+    src: install-config.yaml.j2
+    dest: "{{ playbook_dir }}/../deployment/install-config.yaml"
+
 - name: Set backup_path
   set_fact:
-    backup_path: "../deployment/previous-run/{{ backup_time }}"
+    backup_path: "../deployment/previous-run/{{ timestamp }}"
 
 - name: Ensure timestamped backup directory exists
   file:

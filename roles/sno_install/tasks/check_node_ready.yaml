@@ -19,7 +19,7 @@
 
 - name: Set backup_path
   set_fact:
-    backup_path: "../deployment/previous-run/{{ backup_time }}"
+    backup_path: "../deployment/previous-run/{{ timestamp }}"
 
 - name: Backup install log files from deployment to backup
   copy:
