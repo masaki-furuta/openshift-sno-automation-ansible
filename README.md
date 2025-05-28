@@ -93,12 +93,11 @@ This will:
 ```text
 openshift-sno-automation-ansible/
 ├── 📂 ansible.cfg                  # Ansible configuration file
-├── 📂 contrib/                     # Helper scripts (setup, tools)
+├── 📂 scripts/                     # Helper scripts (setup, tools)
 ├── 📂 deployment/                  # Generated files, ISO, backups
 │   ├── 🔐 auth/                    # kubeadmin credentials, kubeconfig
 │   ├── 🕒 previous-run/            # Timestamped backups of each deployment
 │   └── agent.x86_64.iso            # Generated SNO agent ISO
-├── 📂 devel/                       # Development helper scripts
 ├── 📂 inventory/                   # Inventory and host/group variables
 │   ├── 🗂️ group_vars/
 │   │   └── all.yaml                # Cluster/global vars
