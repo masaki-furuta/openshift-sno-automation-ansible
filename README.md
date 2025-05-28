@@ -25,7 +25,7 @@ This project enables fast, automated deployment of an OpenShift SNO lab with the
 ```sh
 sudo dnf install -y git
 # (optionally set up your SSH key, if needed)
-git clone https://github.com/your-repo/openshift-sno-automation-ansible.git
+git clone https://github.com/masaki-furuta/openshift-sno-automation-ansible.git
 cd openshift-sno-automation-ansible
 ```
 
