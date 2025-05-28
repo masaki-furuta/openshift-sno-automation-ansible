@@ -1,0 +1,40 @@
+---
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: {{ sno_cluster_name }}
+rendezvousIP: {{ rendezvous_ip }}
+additionalNTPSources:
+  - 0.rhel.pool.ntp.org
+  - 1.rhel.pool.ntp.org
+hosts:
+  - hostname: {{ sno_hostname }}
+    role: master
+    interfaces:
+      - name: {{ sno_interface }}
+        macAddress: "{{ sno_mac_addr }}"
+    rootDeviceHints:
+      deviceName: /dev/sda
+    networkConfig:
+      interfaces:
+        - name: {{ sno_interface }}
+          type: ethernet
+          state: up
+          mac-address: "{{ sno_mac_addr }}"
+          ipv4:
+            enabled: true
+            address:
+              - ip: {{ sno_ip }}
+                prefix-length: 24
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 192.168.1.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 192.168.1.1
+            next-hop-interface: {{ sno_interface }}
+            table-id: 254
+
