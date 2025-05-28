@@ -1,0 +1,144 @@
+---
+- name: Enable RPMFusion free repository
+  ansible.builtin.dnf:
+    name: "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    state: present
+
+- name: Enable RPMFusion nonfree repository
+  ansible.builtin.dnf:
+    name: "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    state: present
+
+- name: Install standard packages
+  ansible.builtin.dnf:
+    name:
+      - ansible-collection-ansible-posix
+      - ansible-core
+      - atop
+      - avahi
+      - avahi-tools
+      - bsdtar
+      - ccze
+      - curl
+      - dnsmasq
+      - duff
+      - fdupes
+      - gdb
+      - git
+      - glow
+      - golang
+      - hexedit
+      - htop
+      - intel-undervolt
+      - inxi
+      - jq
+      - kernel-tools
+      - light
+      - lv
+      - mkpasswd
+      - msr-tools
+      - nmap
+      - nmon
+      - nmstate
+      - nss-mdns
+      - pcre-tools
+      - python3-libdnf5
+      - ripgrep
+      - screen
+      - smartmontools
+      - socat
+      - strace
+      - stress-ng
+      - s-tui
+      - syslinux
+      - tmux
+      - w3m
+      - wget2
+      - yamllint
+      - yq
+    state: present
+    update_cache: yes
+
+- name: Install icdiff from external rpm
+  ansible.builtin.dnf:
+    name: "https://raw.githubusercontent.com/rpmsphere/noarch/master/i/icdiff-2.0.7-1.noarch.rpm"
+    state: present
+
+- name: Stop and disable firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: no
+    state: stopped
+
+- name: Extend root LVM to all available space
+  command: lvextend -l +100%FREE /dev/fedora/root
+  register: lvm_result
+  failed_when: >
+    lvm_result.rc != 0
+    and
+    "matches existing size" not in lvm_result.stdout
+    and
+    "No size change" not in lvm_result.stderr
+
+- name: Grow XFS root filesystem
+  command: xfs_growfs /
+  register: xfs_result
+  failed_when: xfs_result.rc != 0 and "data space already at maximum" not in xfs_result.stderr
+
+- name: Ensure extra GRUB params (shell method)
+  shell: |
+    for P in mitigations=off consoleblank=0 msr.allow_writes=on intel_idle.max_cstate=0 processor.max_cstate=0; do
+      grep -q "$P" /etc/default/grub || sed -i "s/\(GRUB_CMDLINE_LINUX=.*\)\"$/\1 $P\"/" /etc/default/grub
+    done
+  args:
+    executable: /bin/bash
+
+- name: Regenerate grub2 configuration
+  command: grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- name: Ensure kernel.sysrq = 1 in /etc/sysctl.d/99-sysrq.conf
+  copy:
+    dest: /etc/sysctl.d/99-sysrq.conf
+    content: |
+      kernel.sysrq = 1
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Apply sysctl settings
+  command: sysctl --system
+
+- name: Deploy intel-undervolt.conf
+  copy:
+    dest: /etc/intel-undervolt.conf
+    content: |
+      # Enable or Disable Triggers (elogind)
+      enable yes
+      # CPU Undervolting
+      undervolt 0 'CPU' -55
+      undervolt 1 'GPU' -130
+      undervolt 2 'CPU Cache' -55
+      undervolt 3 'System Agent' 0
+      undervolt 4 'Analog I/O' 0
+      # Daemon Update Interval
+      interval 5000
+      # Daemon Actions
+      daemon undervolt:once
+      daemon power
+      daemon tjoffset
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and start intel-undervolt-loop service
+  systemd:
+    name: intel-undervolt-loop.service
+    enabled: yes
+    state: started
+
+- name: Enable and start intel-undervolt service
+  systemd:
+    name: intel-undervolt.service
+    enabled: yes
+    state: started
+

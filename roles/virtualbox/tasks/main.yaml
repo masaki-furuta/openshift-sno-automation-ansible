@@ -1,0 +1,111 @@
+---
+- name: List running VirtualBox VMs
+  shell: VBoxManage list runningvms | awk '{print $1}' | tr -d '"'
+  register: running_vms
+  changed_when: false
+
+- name: Stop all running VirtualBox VMs
+  shell: VBoxManage controlvm {{ item }} poweroff
+  loop: "{{ running_vms.stdout_lines }}"
+  when: running_vms.stdout_lines | length > 0
+  ignore_errors: yes
+
+- name: Ensure work directory exists for extension packs
+  file:
+    path: "{{ ansible_env.HOME }}/extpack/VirtualBox-vnc"
+    state: directory
+    mode: '0755'
+
+- name: Enable RPMFusion free repository
+  shell: |
+    dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+  args:
+    creates: /etc/yum.repos.d/rpmfusion-free.repo
+
+- name: Enable RPMFusion nonfree repository
+  shell: |
+    dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  args:
+    creates: /etc/yum.repos.d/rpmfusion-nonfree.repo
+
+- name: Install VirtualBox
+  dnf:
+    name: VirtualBox
+    state: present
+    update_cache: yes
+
+- name: Download VirtualBox-vnc RPM
+  shell: |
+    dnf download VirtualBox-vnc
+  args:
+    chdir: "{{ ansible_env.HOME }}/extpack/VirtualBox-vnc"
+    creates: "{{ ansible_env.HOME }}/extpack/VirtualBox-vnc/VirtualBox-vnc*.rpm"
+
+- name: Find downloaded VirtualBox-vnc RPM file
+  shell: ls {{ ansible_env.HOME }}/extpack/VirtualBox-vnc/VirtualBox-vnc*.rpm
+  register: vbox_vnc_rpm
+  changed_when: false
+
+- name: Extract downloaded VirtualBox-vnc RPM
+  shell: |
+    rpm2cpio {{ vbox_vnc_rpm.stdout }} | cpio -imd
+  args:
+    chdir: "{{ ansible_env.HOME }}/extpack/VirtualBox-vnc"
+    creates: "{{ ansible_env.HOME }}/extpack/VirtualBox-vnc/usr/lib64/virtualbox/ExtensionPacks/VNC"
+
+- name: Install VirtualBox VNC Extension Pack
+  shell: |
+    echo y | VBoxManage extpack install --replace {{ ansible_env.HOME }}/extpack/VirtualBox-vnc/usr/lib64/virtualbox/ExtensionPacks/VNC/*-extpack
+  args:
+    creates: /usr/lib64/virtualbox/ExtensionPacks/VNC
+
+- name: Download Oracle VirtualBox Extension Pack
+  get_url:
+    url: "https://download.virtualbox.org/virtualbox/7.1.8/Oracle_VirtualBox_Extension_Pack-7.1.8.vbox-extpack"
+    dest: "{{ ansible_env.HOME }}/extpack/Oracle_VirtualBox_Extension_Pack-7.1.8.vbox-extpack"
+    mode: '0644'
+
+- name: Install Oracle VirtualBox Extension Pack
+  shell: |
+    echo y | VBoxManage extpack install --replace {{ ansible_env.HOME }}/extpack/Oracle_VirtualBox_Extension_Pack-7.1.8.vbox-extpack
+  args:
+    creates: /usr/lib64/virtualbox/ExtensionPacks/Oracle_VM_VirtualBox_Extension_Pack
+
+- name: Install libvncserver
+  dnf:
+    name: libvncserver
+    state: present
+
+- name: Create symlink for VBoxRT.so
+  file:
+    src: /usr/lib64/virtualbox/VBoxRT.so
+    dest: /usr/lib64/virtualbox/ExtensionPacks/VNC/VBoxRT.so
+    state: link
+    force: yes
+
+- name: Run ldconfig
+  command: ldconfig
+
+- name: List installed VirtualBox extension packs
+  shell: VBoxManage list extpacks
+  register: extpacks_output
+  ignore_errors: yes
+
+- name: Print extension packs info
+  debug:
+    msg: "{{ extpacks_output.stdout | default('Unable to list extension packs') }}"
+
+- name: Install akmod-VirtualBox and kernel-devel
+  shell: |
+    dnf install -y akmod-VirtualBox kernel-devel-$(uname -r)
+  args:
+    creates: /usr/src/kernels/$(uname -r)
+
+- name: Build/activate VirtualBox kernel modules
+  shell: |
+    akmods --kernels $(uname -r) && systemctl restart vboxdrv.service
+
+- name: Print VirtualBox setup completion message
+  debug:
+    msg: "Setup completed successfully! Both VirtualBox VNC and Oracle VirtualBox Extension Pack have been successfully installed."
+

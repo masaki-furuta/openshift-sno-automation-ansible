@@ -1,0 +1,8 @@
+---
+- name: Install VirtualBox
+  hosts: localhost
+  become: no
+  gather_facts: yes
+  roles:
+    - virtualbox
+

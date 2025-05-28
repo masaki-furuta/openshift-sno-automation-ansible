@@ -1,0 +1,8 @@
+---
+- name: Install OpenShift CLI tools
+  hosts: localhost
+  become: no
+  gather_facts: yes
+  roles:
+    - openshift_cli
+

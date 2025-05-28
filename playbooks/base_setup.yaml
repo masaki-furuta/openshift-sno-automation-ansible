@@ -1,0 +1,10 @@
+# playbooks/base_setup.yaml
+---
+- name: Initial Fedora 42 Server Setup for OpenShift SNO
+  hosts: localhost
+  become: yes
+  gather_facts: true
+
+  roles:
+    - base_setup
+

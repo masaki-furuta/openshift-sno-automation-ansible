@@ -1,0 +1,80 @@
+---
+- name: Ensure ~/.local/bin exists
+  file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Download butane
+  shell: |
+    curl -fsSL https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/butane/latest/butane \
+      -o "{{ ansible_env.HOME }}/.local/bin/butane"
+    chmod +x "{{ ansible_env.HOME }}/.local/bin/butane"
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/butane"
+
+- name: Show butane version
+  shell: |
+    "{{ ansible_env.HOME }}/.local/bin/butane" --version 2>/dev/null || true
+  register: butane_version
+  ignore_errors: true
+
+- name: Print butane version info
+  debug:
+    msg: "{{ butane_version.stdout | default('Butane version unknown') }}"
+
+- name: Download openshift-install
+  shell: |
+    curl -fsSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux.tar.gz \
+    | tar -xz -C "{{ ansible_env.HOME }}/.local/bin" openshift-install
+    chmod +x "{{ ansible_env.HOME }}/.local/bin/openshift-install"
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/openshift-install"
+
+- name: Show openshift-install version
+  shell: |
+    "{{ ansible_env.HOME }}/.local/bin/openshift-install" version 2>/dev/null | perl -pe 's/\n/, /g' || true
+  register: ocp_install_version
+  ignore_errors: true
+
+- name: Print openshift-install version info
+  debug:
+    msg: "{{ ocp_install_version.stdout | default('openshift-install version unknown') }}"
+
+- name: Download oc and kubectl
+  shell: |
+    curl -fsSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz \
+    | tar -xz -C "{{ ansible_env.HOME }}/.local/bin" oc kubectl
+    chmod +x "{{ ansible_env.HOME }}/.local/bin/oc" "{{ ansible_env.HOME }}/.local/bin/kubectl"
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/oc"
+
+- name: Show oc version
+  shell: |
+    "{{ ansible_env.HOME }}/.local/bin/oc" version 2>/dev/null | perl -pe 's/\n/, /g' || true
+  register: oc_version
+  ignore_errors: true
+
+- name: Print oc version info
+  debug:
+    msg: "{{ oc_version.stdout | default('oc version unknown') }}"
+
+- name: Show kubectl version
+  shell: |
+    "{{ ansible_env.HOME }}/.local/bin/kubectl" version 2>/dev/null | perl -pe 's/\n/, /g' || true
+  register: kubectl_version
+  ignore_errors: true
+
+- name: Print kubectl version info
+  debug:
+    msg: "{{ kubectl_version.stdout | default('kubectl version unknown') }}"
+
+- name: Show completion message for OpenShift CLI
+  debug:
+    msg: "🎉 All OpenShift CLI tools installed in {{ ansible_env.HOME }}/.local/bin"
+
+# 補足メッセージ (PATHの注意)
+- name: Show PATH reminder if needed
+  debug:
+    msg: "If ~/.local/bin is not in your PATH, add it with: echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+
