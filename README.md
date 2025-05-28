@@ -74,7 +74,7 @@ This will:
 Now you can run the full SNO deployment playbook:
 
 ```sh
-ansible-playbook playbooks/deploy_sno.yaml -i inventory
+ansible-playbook playbooks/deploy_sno.yaml
 ```
 
 This will:
