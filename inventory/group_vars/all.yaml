@@ -1,6 +1,5 @@
 ---
 sno_cluster_name: sno-cluster
-rendezvous_ip: 192.168.1.100
 sno_hostname: sno1
 sno_interface: enp0s3
 sno_mac_addr: "52:54:00:aa:bb:cc"
