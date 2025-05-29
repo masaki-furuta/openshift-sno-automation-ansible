@@ -64,6 +64,7 @@ This template defines the OpenShift install configuration, including details for
    - To start the setup, run the following playbooks:
      ```bash
      ansible-playbook playbooks/base_setup.yaml 🛠️
+     ansible-playbook playbooks/openshift_cli.yaml 📦
      ansible-playbook playbooks/virtualbox.yaml 🖥️
      ansible-playbook playbooks/deploy_sno.yaml 🚀
      ```
