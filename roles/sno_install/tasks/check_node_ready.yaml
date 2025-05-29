@@ -5,8 +5,8 @@
   shell: |
     oc get clusterversion version -o jsonpath="{.status.conditions[?(@.type=='Available')].status}" --kubeconfig ../deployment/auth/kubeconfig
   register: result
-  retries: 60
-  delay: 60
+  retries: 90
+  delay: 90
   until: result.stdout == "True"
 
 - name: Wait for all cluster operators to be available
