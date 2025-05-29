@@ -31,7 +31,13 @@ cd openshift-sno-automation-ansible
 
 ### 1. 🛠️ Base Setup (Initial Host Configuration)
 
-Run **base\_setup** to initialize your Fedora 42 host:
+**Before running the playbooks, install Ansible and required collections:**
+
+```sh
+sudo dnf -y install ansible-core ansible-collection-community-general
+```
+
+Then, run **base\_setup** to initialize your Fedora 42 host:
 
 ```sh
 ansible-playbook playbooks/base_setup.yaml
