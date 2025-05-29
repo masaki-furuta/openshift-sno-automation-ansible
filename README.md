@@ -2,12 +2,6 @@
 
 This repository provides Ansible automation for fully setting up a Single Node OpenShift (SNO) environment on Fedora 42 Server with VirtualBox. The workflow is optimized for repeatability and minimal manual steps.
 
-## 🛡️ License
-
-```
-Apache License 2.0
-```
-
 ## 📋 Overview
 
 This project enables fast, automated deployment of an OpenShift SNO lab with the following features:
