@@ -3,16 +3,20 @@
   ansible.builtin.dnf:
     name: "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
     state: present
+    disable_gpg_check: true
+
 
 - name: Enable RPMFusion nonfree repository
   ansible.builtin.dnf:
     name: "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
     state: present
+    disable_gpg_check: true
 
 - name: Install standard packages
   ansible.builtin.dnf:
     name:
       - ansible-collection-ansible-posix
+      - ansible-collection-community-general
       - ansible-core
       - atop
       - avahi
@@ -63,6 +67,12 @@
   ansible.builtin.dnf:
     name: "https://raw.githubusercontent.com/rpmsphere/noarch/master/i/icdiff-2.0.7-1.noarch.rpm"
     state: present
+    disable_gpg_check: true
+
+- name: dnf -y upgrade (Upgrade all packages)
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
 
 - name: Stop and disable firewalld
   ansible.builtin.systemd:
@@ -142,3 +152,7 @@
     enabled: yes
     state: started
 
+- name: Show reboot instruction in English
+  ansible.builtin.debug:
+    msg: |
+      Please reboot the system to apply all updates.
