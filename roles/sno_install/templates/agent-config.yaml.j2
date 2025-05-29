@@ -3,7 +3,7 @@ apiVersion: v1beta1
 kind: AgentConfig
 metadata:
   name: {{ sno_cluster_name }}
-rendezvousIP: {{ hostvars['sno1'].ip }}
+rendezvousIP: {{ hostvars['sno1'].ansible_host }}
 additionalNTPSources:
   - 0.rhel.pool.ntp.org
   - 1.rhel.pool.ntp.org
@@ -24,7 +24,7 @@ hosts:
           ipv4:
             enabled: true
             address:
-              - ip: {{ hostvars['sno1'].ip }}
+              - ip: {{ hostvars['sno1'].ansible_host }}
                 prefix-length: 24
             dhcp: false
       dns-resolver:

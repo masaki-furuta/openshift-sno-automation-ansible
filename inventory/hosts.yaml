@@ -9,10 +9,9 @@ all:
       ansible_host: 192.168.1.100
       ansible_user: core
       ansible_ssh_private_key_file: ~/.ssh/id_rsa
-      hostname: sno1
+      hostname: "{{ inventory_hostname }}"
       interface: enp0s3
       mac_addr: "52:54:00:aa:bb:cc"
-      ip: 192.168.1.100
       cidr: 192.168.1.0/24
       raw_path: "/root/VirtualBox VMs/sno1/sno1.raw"
       iso_path: "../deployment/agent.x86_64.iso"

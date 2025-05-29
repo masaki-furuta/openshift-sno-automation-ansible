@@ -34,7 +34,7 @@
 - name: Show oc login command
   shell: |
     oc login -u kubeadmin -p $(cat ../deployment/auth/kubeadmin-password) \
-      https://api.sno-cluster.test:6443 --insecure-skip-tls-verify --kubeconfig ../deployment/auth/kubeconfig
+      https://api.{{ sno_cluster_name }}.{{ base_domain }}:6443 --insecure-skip-tls-verify --kubeconfig ../deployment/auth/kubeconfig
 
 # 必要なら終了タイマーや通知は最後に
 - name: (Optional) 終了タイマー呼び出し
