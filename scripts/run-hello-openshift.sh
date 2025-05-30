@@ -16,5 +16,5 @@ oc get route
 echo "# 5. curlで確認"
 ROUTE=$(oc get route hello-openshift -o jsonpath='{.spec.host}')
 echo "URL: http://$ROUTE"
-curl -s http://$ROUTE || echo "⚠️ curl failed"
+w3m http://$ROUTE || echo "⚠️ curl failed"
 

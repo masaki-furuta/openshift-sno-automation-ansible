@@ -118,6 +118,56 @@
 - name: Apply sysctl settings
   command: sysctl --system
 
+- name: Deploy cpu-perf-fix script
+  copy:
+    dest: /usr/local/bin/cpu-perf-fix.sh
+    mode: '0755'
+    owner: root
+    group: root
+    content: |
+      #!/bin/bash
+
+      # Set CPU governor to performance
+      for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
+        echo performance | tee $CPU/cpufreq/scaling_governor
+      done
+
+      # Fix the minimum frequency to the maximum frequency
+      MAX_FREQ=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)
+      for CPU in /sys/devices/system/cpu/cpu[0-9]*; do
+        echo $MAX_FREQ | tee $CPU/cpufreq/scaling_min_freq
+      done
+
+      # Enable Turbo Boost (for intel_pstate driver)
+      echo 0 | tee /sys/devices/system/cpu/intel_pstate/no_turbo
+
+      # Disable irqbalance (requires reboot or manual stop)
+      systemctl disable --now irqbalance
+
+- name: Deploy cpu-perf-fix service
+  copy:
+    dest: /etc/systemd/system/cpu-perf-fix.service
+    mode: '0644'
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Set all CPUs to performance governor and fix freq to cpuinfo_max_freq
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/cpu-perf-fix.sh
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start cpu-perf-fix service
+  systemd:
+    name: cpu-perf-fix.service
+    enabled: yes
+    state: started
+
 - name: Deploy intel-undervolt.conf
   copy:
     dest: /etc/intel-undervolt.conf
@@ -125,9 +175,9 @@
       # Enable or Disable Triggers (elogind)
       enable yes
       # CPU Undervolting
-      undervolt 0 'CPU' -55
-      undervolt 1 'GPU' -130
-      undervolt 2 'CPU Cache' -55
+      undervolt 0 'CPU' -50
+      undervolt 1 'GPU' -50
+      undervolt 2 'CPU Cache' -50
       undervolt 3 'System Agent' 0
       undervolt 4 'Analog I/O' 0
       # Daemon Update Interval
@@ -151,6 +201,10 @@
     name: intel-undervolt.service
     enabled: yes
     state: started
+
+- name: systemd daemon-reload
+  systemd:
+    daemon_reload: true
 
 - name: Show reboot instruction in English
   ansible.builtin.debug:
