@@ -26,14 +26,15 @@
 - name: Create and configure VirtualBox VM with SCHED_FIFO 99
   shell: |
     VBoxManage createvm --name "{{ hostvars['sno1'].hostname }}" --register
-    VBoxManage modifyvm      "{{ hostvars['sno1'].hostname }}" --memory 20480 --cpus 8 --ioapic on
-    VBoxManage modifyvm      "{{ hostvars['sno1'].hostname }}" --nic1 bridged --bridgeadapter1 "{{ hostvars['localhost'].bridge_if }}" --nictype1 virtio
-    VBoxManage modifyvm      "{{ hostvars['sno1'].hostname }}" --macaddress1 "{{ sno1_mac }}"
-    VBoxManage modifyvm      "{{ hostvars['sno1'].hostname }}" --vrde on --vrdeport 5900 --vrdeproperty VNCPassword=vnc
-    VBoxManage storagectl    "{{ hostvars['sno1'].hostname }}" --name "VirtIO Controller" --add virtio --controller VirtIO --hostiocache on
-    VBoxManage storageattach "{{ hostvars['sno1'].hostname }}" --storagectl "VirtIO Controller" --port 0 --device 0 --type hdd --medium "{{ hostvars['sno1'].raw_path }}" --nonrotational on || true
-    VBoxManage storageattach "{{ hostvars['sno1'].hostname }}" --storagectl "VirtIO Controller" --port 1 --device 0 --type dvddrive --medium "{{ hostvars['sno1'].iso_path }}" || true
-    VBoxManage modifyvm      "{{ hostvars['sno1'].hostname }}" --boot1 disk --boot2 dvd --boot3 none --boot4 none
+    VBoxManage modifyvm        "{{ hostvars['sno1'].hostname }}" --cpuexecutioncap 100 --paravirtprovider kvm
+    VBoxManage modifyvm        "{{ hostvars['sno1'].hostname }}" --memory 20480 --cpus 8 --ioapic on
+    VBoxManage modifyvm        "{{ hostvars['sno1'].hostname }}" --nic1 bridged --bridgeadapter1 "{{ hostvars['localhost'].bridge_if }}" --nictype1 virtio
+    VBoxManage modifyvm        "{{ hostvars['sno1'].hostname }}" --macaddress1 "{{ sno1_mac }}"
+    VBoxManage modifyvm        "{{ hostvars['sno1'].hostname }}" --vrde on --vrdeport 5900 --vrdeproperty VNCPassword=vnc
+    VBoxManage storagectl      "{{ hostvars['sno1'].hostname }}" --name "VirtIO Controller" --add virtio --controller VirtIO --hostiocache on
+    VBoxManage storageattach   "{{ hostvars['sno1'].hostname }}" --storagectl "VirtIO Controller" --port 0 --device 0 --type hdd --medium "{{ hostvars['sno1'].raw_path }}" --nonrotational on || true
+    VBoxManage storageattach   "{{ hostvars['sno1'].hostname }}" --storagectl "VirtIO Controller" --port 1 --device 0 --type dvddrive --medium "{{ hostvars['sno1'].iso_path }}" || true
+    VBoxManage modifyvm        "{{ hostvars['sno1'].hostname }}" --boot1 disk --boot2 dvd --boot3 none --boot4 none
 
 - name: Start VirtualBox VM
   shell: |
