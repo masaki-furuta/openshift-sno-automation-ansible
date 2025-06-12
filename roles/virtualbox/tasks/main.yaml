@@ -5,7 +5,8 @@
   changed_when: false
 
 - name: Stop all running VirtualBox VMs
-  shell: VBoxManage controlvm "{{ running_vms.stdout_lines }}" poweroff
+  shell: VBoxManage controlvm "{{ item }}" poweroff
+  loop: "{{ running_vms.stdout_lines }}"
   when: running_vms.stdout_lines | length > 0
   ignore_errors: yes
 
