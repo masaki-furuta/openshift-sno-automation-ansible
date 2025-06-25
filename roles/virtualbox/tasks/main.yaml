@@ -61,13 +61,13 @@
 
 - name: Download Oracle VirtualBox Extension Pack
   get_url:
-    url: "https://download.virtualbox.org/virtualbox/7.1.8/Oracle_VirtualBox_Extension_Pack-7.1.8.vbox-extpack"
-    dest: "{{ ansible_env.HOME }}/extpack/Oracle_VirtualBox_Extension_Pack-7.1.8.vbox-extpack"
+    url: "https://download.virtualbox.org/virtualbox/7.1.10/Oracle_VirtualBox_Extension_Pack-7.1.10.vbox-extpack"
+    dest: "{{ ansible_env.HOME }}/extpack/Oracle_VirtualBox_Extension_Pack-7.1.10.vbox-extpack"
     mode: '0644'
 
 - name: Install Oracle VirtualBox Extension Pack
   shell: |
-    echo y | VBoxManage extpack install --replace {{ ansible_env.HOME }}/extpack/Oracle_VirtualBox_Extension_Pack-7.1.8.vbox-extpack
+    echo y | VBoxManage extpack install --replace {{ ansible_env.HOME }}/extpack/Oracle_VirtualBox_Extension_Pack-7.1.10.vbox-extpack
   args:
     creates: /usr/lib64/virtualbox/ExtensionPacks/Oracle_VM_VirtualBox_Extension_Pack
 
