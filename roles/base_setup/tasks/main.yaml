@@ -22,6 +22,7 @@
       - avahi
       - avahi-tools
       - bsdtar
+      - btop
       - ccze
       - curl
       - dnsmasq
@@ -32,7 +33,6 @@
       - glow
       - golang
       - hexedit
-      - htop
       - intel-undervolt
       - inxi
       - jq

@@ -19,6 +19,7 @@ PACKAGES=(
   avahi
   avahi-tools
   bsdtar
+  btop
   ccze
   curl
   dnsmasq
@@ -29,7 +30,6 @@ PACKAGES=(
   glow
   golang
   hexedit
-  htop
   https://raw.githubusercontent.com/rpmsphere/noarch/master/i/icdiff-2.0.7-1.noarch.rpm
   intel-undervolt
   inxi
