@@ -28,8 +28,8 @@ echo "Installing VirtualBox VNC Extension Pack..."
 sudo VBoxManage extpack install $WORKDIR_PATH/VirtualBox-vnc/usr/lib64/virtualbox/ExtensionPacks/VNC/*-extpack
 
 # Oracle VirtualBox Extension Pack のダウンロード
-EXTENSION_URL="https://download.virtualbox.org/virtualbox/7.1.10/Oracle_VirtualBox_Extension_Pack-7.1.10.vbox-extpack"
-EXT_PACK_PATH="$WORKDIR_PATH/Oracle_VirtualBox_Extension_Pack-7.1.10.vbox-extpack"
+EXTENSION_URL="https://download.virtualbox.org/virtualbox/7.1.12/Oracle_VirtualBox_Extension_Pack-7.1.12.vbox-extpack"
+EXT_PACK_PATH="$WORKDIR_PATH/Oracle_VirtualBox_Extension_Pack-7.1.12.vbox-extpack"
 
 echo "Downloading Oracle VirtualBox Extension Pack..."
 wget -O $EXT_PACK_PATH $EXTENSION_URL
